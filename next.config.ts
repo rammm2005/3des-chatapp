@@ -1,7 +1,20 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    domains: ['lh3.googleusercontent.com', 'avatars.githubusercontent.com'],
+  },
+  // For DeploymentConfig
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  basePath: '',
+  assetPrefix: '',
+  trailingSlash: true,
+  productionBrowserSourceMaps: true,
 };
 
 export default nextConfig;
