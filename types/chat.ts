@@ -1,8 +1,5 @@
-export interface ChatMessage {
+export type ChatMessage = {
   sender: string;
   message: string;
-  timestamp: string;
-  type?: 'text' | 'image';
-  decrypted?: string;
-  mime?: string;
-}
+  decrypted?: string; 
+};

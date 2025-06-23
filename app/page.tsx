@@ -13,7 +13,6 @@ import io from "socket.io-client"
 import { toast } from "sonner"
 import type { ChatMessage } from "@/types/chat"
 import { Mail, Shield, Send, LogOut, Lock, Unlock, MessageCircle, User, CheckCircle2 } from "lucide-react"
-import { UploadImage } from "@/components/upload-image"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000"
 const socket = io(BACKEND_URL)
@@ -26,7 +25,6 @@ export default function Home() {
   const [message, setMessage] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
-
 
   useEffect(() => {
     const savedUser = localStorage.getItem("user")
@@ -93,7 +91,7 @@ export default function Home() {
     }
   }
 
-  const handleDecrypt = async (index: number, isImage = false) => {
+  const handleDecrypt = async (index: number) => {
     try {
       const m = messages[index];
       const res = await axios.post(`${BACKEND_URL}/api/chat/decrypt`, {
@@ -102,14 +100,12 @@ export default function Home() {
       });
       const newMessages = [...messages];
       newMessages[index].decrypted = res.data.decrypted;
-      newMessages[index].type = isImage ? 'image' : 'text';
       setMessages(newMessages);
       toast.success("Berhasil didekripsi!");
     } catch {
       toast.error("Gagal dekripsi");
     }
-  };
-
+  }
 
   const loadMessages = async (currentEmail?: string) => {
     const userEmail = currentEmail || user?.email
@@ -163,16 +159,14 @@ export default function Home() {
                 <CardDescription>Masukkan email untuk memulai chat aman</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Input
-                    placeholder="nama@email.com"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onKeyPress={(e) => handleKeyPress(e, handleRegister)}
-                    className="h-12 text-center border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
+                <Input
+                  placeholder="nama@email.com"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, handleRegister)}
+                  className="h-12 text-center border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                />
                 <Button
                   onClick={handleRegister}
                   disabled={isLoading || !email}
@@ -198,16 +192,14 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Input
-                    placeholder="Masukkan 6 digit kode OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    onKeyPress={(e) => handleKeyPress(e, handleVerifyOtp)}
-                    className="h-12 text-center text-lg tracking-widest border-gray-200 focus:border-green-500 focus:ring-green-500"
-                    maxLength={6}
-                  />
-                </div>
+                <Input
+                  placeholder="Masukkan 6 digit kode OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, handleVerifyOtp)}
+                  className="h-12 text-center text-lg tracking-widest border-gray-200 focus:border-green-500 focus:ring-green-500"
+                  maxLength={6}
+                />
                 <Button
                   onClick={handleVerifyOtp}
                   disabled={isLoading || otp.length !== 6}
@@ -226,10 +218,8 @@ export default function Home() {
             </Card>
           )}
 
-
           {step === "chat" && user && (
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -275,7 +265,6 @@ export default function Home() {
                     ) : (
                       messages.map((m, i) => {
                         const isMe = m.sender === user?.email;
-                        const isImage = m.type === 'image';
                         const decrypted = m.decrypted;
 
                         return (
@@ -293,7 +282,15 @@ export default function Home() {
                                   </div>
                                 )}
 
-                                
+                                <div className="break-words">
+                                  {!decrypted && m.message}
+                                  {isMe && decrypted && (
+                                    <div className="mt-2 text-xs text-white text-right opacity-90">{decrypted}</div>
+                                  )}
+                                  {!isMe && decrypted && (
+                                    <div className="mt-2 text-xs text-gray-800">{decrypted}</div>
+                                  )}
+                                </div>
 
                                 {!decrypted && (
                                   <Badge
@@ -310,10 +307,11 @@ export default function Home() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleDecrypt(i, isImage)}
-                                  className="absolute -bottom-8 left-0 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-blue-600 hover:text-blue-700 h-6 px-2"
+                                  onClick={() => handleDecrypt(i)}
+                                  className={`absolute -bottom-8 ${isMe ? "right-0" : "left-0"} opacity-0 group-hover:opacity-100 transition-opacity text-xs text-blue-600 hover:text-blue-700 h-6 px-2`}
                                 >
-                                  {isImage ? '🔓 Dekripsi Gambar' : (<><Unlock className="w-3 h-3 mr-1" /> Dekripsi</>)}
+                                  <Unlock className="w-3 h-3 mr-1" />
+                                  Dekripsi
                                 </Button>
                               )}
                             </div>
@@ -328,7 +326,6 @@ export default function Home() {
 
                 <div className="p-4">
                   <div className="flex gap-2 items-end">
-                    <UploadImage user={user} onSuccess={() => loadMessages(user.email)} />
                     <Input
                       placeholder="Ketik pesan..."
                       value={message}
